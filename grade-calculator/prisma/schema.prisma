@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  courses   Course[]
+  simulations Simulation[]
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  name        String
+  code        String?
+  semester    String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  evaluations Evaluation[]
+  simulations Simulation[]
+}
+
+model Evaluation {
+  id          String   @id @default(cuid())
+  name        String
+  weight      Float    // Peso en porcentaje (0-100)
+  grade       Float?   // Nota obtenida (puede estar vacía)
+  maxGrade    Float    @default(20) // Nota máxima (generalmente 20)
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Simulation {
+  id              String   @id @default(cuid())
+  courseId        String
+  course          Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentAverage  Float    // Promedio actual calculado
+  gradeNeeded     Float?   // Nota necesaria para aprobar
+  passingGrade    Float    @default(10.5) // Nota mínima para aprobar
+  results         Json     // JSON con el detalle de la simulación
+  createdAt       DateTime @default(now())
+}
